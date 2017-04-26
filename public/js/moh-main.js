@@ -234,6 +234,7 @@ $('p#summary-checkout').text("Check Out: " + JSON.parse(localStorage.getItem("de
 
 
  	$(document).on("click", "input#guest-info-form", function(e){
+ 		e.preventDefault();
  		formGuestInfo();
  	});
 
@@ -257,15 +258,14 @@ $('p#summary-checkout').text("Check Out: " + JSON.parse(localStorage.getItem("de
 		for(i=0;i<rm_nums[0].ids.length;i++){
 			console.log(rm_nums[0].ids[i]);
 			roomsArray.push(rm_nums[0].ids[i]);
+			console.log(roomsArray);
 		}
-	    // console.log(fn, ln, em, ad, country, phone, postcode, adults, children, arr_time);
+	     console.log(fn, ln, em, ad, country, phone, postcode, adults, children, arr_time);
 	    // console.log("this is line 46");
 
-		$.post(myAjax.ajaxurl, {
-	    	action:'moh_ajax_action_guest_info',
-	    	security_info: myAjax.security,
-	    	checkin: arrive,
-	    	checkout: depart,
+	    var guestData = {
+	    	checkin: arr,
+	    	checkout: dep,
 	    	rm_num: rm_num,
 	    	rm_nums: roomsArray,
 	    	fname:fn, 
@@ -279,10 +279,89 @@ $('p#summary-checkout').text("Check Out: " + JSON.parse(localStorage.getItem("de
 	    	no_children:children, 
 	    	arr_time:arr_time
 
-	    }, function(data4){
-					$('div#info-success').html(data4);
+
+		};
+		console.log(guestData);
+	    // console.log(fn, ln, em, ad, country, phone, postcode, adults, children, arr_time);
+	    // console.log("this is line 46");
+	     $.ajax({
+					type:'POST',
+					dataType: 'json',
+					url: myAjax.ajaxurl,
+					data: {
+						action: 'moh_ajax_action_guest_info',
+						data: guestData,
+						//submission: document.getElementById('xyz').value,
+						security: myAjax.guest_security,
+					},
+					success: function(response){
+						for(i in response.data){ 
+							$('div#info-success').append(
+								response.data[i].guest_id,
+								response.data[i].arrival_date,
+								response.data[i].guest_name,
+								response.data[i].num_rooms, 
+								response.data[i].arrival_time,
+								response.data[i].booking_id
+						
+
+								);
+	
+							}
+						
+					},
+					error: function(response){
+						alert("error" + response);
+					}
+				});
+	     console.log("after aj");
+	   //      $.ajax({
+				// 	type:'POST',
+				// 	dataType: 'json',
+				// 	url: myAjax.ajaxurl,
+				// 	data: {
+				// 		action: 'moh_ajax_action_guest_info',
+				// 		data: guestData,
+				// 		//submission: document.getElementById('xyz').value,
+				// 		security_info: myAjax.checkAvail_security
+				// 	},
+				// 	success: function(response){
+				// 		if(response.success){
+				// 			$('div#booking-details').html(response.data);
+				// 			alert("aj ok");
+				// 			alert(response.data);
+
+				// 		}else{
+				// 			alert("aj not ok");
+				// 		}
+				// 	},
+				// 	error: function(response){
+				// 		alert("error" + response);
+				// 	}
+				// });
+
+		// $.post(myAjax.ajaxurl, {
+	 //    	action:'moh_ajax_action_guest_info',
+	 //    	security_info: myAjax.security,
+	 //    	checkin: arrive,
+	 //    	checkout: depart,
+	 //    	rm_num: rm_num,
+	 //    	rm_nums: roomsArray,
+	 //    	fname:fn, 
+	 //    	lname:ln, 
+	 //    	email:em,
+	 //    	address:ad,
+	 //    	country:country, 
+	 //    	phone:phone,
+	 //    	postcode:postcode,
+	 //    	no_adults:adults,
+	 //    	no_children:children, 
+	 //    	arr_time:arr_time
+
+	 //    }, function(data4){
+		// 			$('div#info-success').html(data4);
 				
-			});
+		// 	});
 		
 
 	}//END formGuestInfo

@@ -20,13 +20,14 @@ require (plugin_dir_path(__FILE__) . 'admin/moh-rooms-custom-post.php');
 function moh_admin_enqueue_scripts(){
 
   wp_enqueue_style( 'moh_enqueue_style', plugins_url('public/css/moh-style.css', __FILE__ ) );
-  wp_enqueue_style('jquery-style', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
+  wp_enqueue_style('jquery-style', 'https:/e/ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
   wp_register_script( 'moh_main_js', plugin_dir_url( __FILE__).'/public/js/moh-main.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
   wp_localize_script('moh_main_js', 'myAjax', array(
       'security' => wp_create_nonce('moh_check_avail'),
+      'security_guest'=>wp_create_nonce('moh_guest'),
       'ajaxurl'  => admin_url('admin-ajax.php'),
       'checkAvail_security'=>wp_create_nonce('moh_check_avail_action'),
-      'getDetails'=>wp_create_nonce('marie_is_confused')
+      'guest_security'=>wp_create_nonce('moh_ajax_action_guest_info')
       ));
   wp_enqueue_script('jquery');
   wp_enqueue_script('moh_main_js');
@@ -153,28 +154,31 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
 
   //get guest info from form and add to db
   function moh_ajax_guest_info(){
-    if(! check_ajax_referer('wp_rooms_action', 'security_info')){
-      echo "info nonce notok";
-    }else{
-      echo "info nonce ok";
+    if(! check_ajax_referer('moh_ajax_action_guest_info', 'security')){
+       wp_send_json_error("nonocec" );
     }
-   // echo $arr;
-   // echo $_POST['dep'];
-    $arr = $_POST['checkin'];
-    $dep = $_POST['checkout'];
-    $fn=$_POST['fname'];
-    $ln=$_POST['lname'];
-    $em=$_POST['email'];
-    $ad=$_POST['address'];
-    $country=$_POST['country'];
-    $phone=$_POST['phone'];
-    $postcode=$_POST['postcode'];
-    $adults=$_POST['no_adults'];
-    $children =$_POST['no_children'];
-    $arr_time=$_POST['arr_time'];
-    $room_no = $_POST['rm_num'];
-
-    $room_nos = $_POST['rm_nums'];
+    if(!isset($_POST['data']['checkin'])){
+      wp_send_json_error( "not set");
+    }
+    else{
+      //wp_send_json_success(" $data" );
+    }
+    //array to send response data
+    //$bookingResponse[];
+    $arr = $_POST['data']['checkin'];
+    $dep = $_POST['data']['checkout'];
+    $fn=$_POST['data']['fname'];
+    $ln=$_POST['data']['lname'];
+    $em=$_POST['data']['email'];
+    $ad=$_POST['data']['address'];
+    $country=$_POST['data']['country'];
+    $phone=$_POST['data']['phone'];
+    $postcode=$_POST['data']['postcode'];
+    $adults=$_POST['data']['no_adults'];
+    $children =$_POST['data']['no_children'];
+    $arr_time=$_POST['data']['arr_time'];
+    $room_no = $_POST['data']['rm_num'];
+    $room_nos = $_POST['data']['rm_nums'];
 
     //GET ACTUAL ROOM NUMBERS (IE NOT WP ROOM POST ID).
     // PUT ACTUAL ROOM NUMBERS IN $actual_rooms_array
@@ -186,29 +190,30 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
             $get_rms = $wpdb->get_results("SELECT actual_rm_no from wp_rooms where rm_id = '$room_no'");
             //$rowCount = mysqli_num_rows(${'r_'.$room_no});
             foreach($get_rms as $get_rm){
-              echo $get_rm->actual_rm_no;
+              //echo $get_rm->actual_rm_no;
               array_push($actual_rooms_array, $get_rm->actual_rm_no);
+              
             }
     }
-/////////////////////////////////////////////////////////
-///////////   GET INFO AND REDIRECT TO BOOKING PAGE   ///
-/////////////////////////////////////////////////////////
+    // wp_send_json_success( $arr, $dep, $fn,$ln);
+     //wp_send_json_success($actual_rooms_array);
+//var_dump($actual_rooms_array);
 
 
-function moh_booking_data_action(){
 
-
-}
-add_action('wp_ajax_moh_booking_data_action', 'moh_booking_data_action'  );
-add_action('wp_ajax_nopriv_moh_booking_data_action', 'moh_booking_data_action'  );
-
-
-////////////////////////////////////////////////////////////////
-///////////////////// BOOKING PAGE   ///////////////////////////
-////////////////////////////////////////////////////////////////
+//OLD CODE, FOR ONLY ALLOWED TO BOOK ONE ROOM PER TRANSACTION
+ /////////////////////
+// global $wpdb,$wp_query;;
+// $sql = "SELECT actual_rm_no from wp_rooms where rm_id = '$room_no'";
+// $get_room = $wpdb->get_results($sql);
+// if($get_room){echo "got room";}else{echo "didn't get room";}
+// foreach($get_room as $the_room){
+//           $the_actual_room = $the_room->actual_rm_no;
+//         }
+/////////////////////////
 
 //ADD GUEST INFORMATION TO DB
-    global $wpdb;
+    global $wpdb, $wp_query;
      $add_guest = $wpdb->insert('wp_guests', array(
     'fname' => $fn,
     'lname' => $ln,
@@ -224,18 +229,21 @@ add_action('wp_ajax_nopriv_moh_booking_data_action', 'moh_booking_data_action'  
      $guest = $wpdb->insert_id;
 
      if($add_guest){
-      echo $fn . " added, guest id is (secret) " . $guest;
-      echo "<p>arr: " . $arr . "</p>";
-      echo "<p>dep: ".$dep."</p>";
-      echo "<p>guest: ".$guest."</p>";
+     
+      //wp_send_json_success("added" );
+       //$availResponse[] = array(
+      // echo $fn . " added, guest id is (secret) " . $guest;
+      // echo "<p>arr: " . $arr . "</p>";
+      // echo "<p>dep: ".$dep."</p>";
+      // echo "<p>guest: ".$guest."</p>";
      }else{
       echo $fn . " not added";
      }
     
    
-//////////////////////////
-///PAYMENT WILL GO HERE////
-//////////////////////////
+// //////////////////////////
+// ///PAYMENT WILL GO HERE////
+// //////////////////////////
 
 // BOOKING QUERY 
      //array to hold booking ids
@@ -250,26 +258,91 @@ add_action('wp_ajax_nopriv_moh_booking_data_action', 'moh_booking_data_action'  
          if($book_query){
         $booking_id = $wpdb->insert_id;
         //array_push($confirm_booking, $wpdb->insert_id)
-        echo "booking id is: " . $booking_id . "<br>";
-        echo "booked";
+        //echo "booking id is: " . $booking_id . "<br>";
+        //echo "booked";
+        
        }
        else{
-        echo "not booked";
+        //echo "not booked";
+        wp_send_json_error("not booked" );
        }
           
     }
+      $bookingResponse[] = array(
+        'guest_id'=>"<p>Guest ID: ".$guest. "</p>",
+        'arrival_date'=>"<p>Check In Date: ".$arr. "</p>",
+        'departure_date'=>"<p>Check Out Date: ".$dep. "</p>",
+        'guest_name'=>"<p>Name: ".$fn." ".$ln. "</p>",
+        'num_rooms'=>"<p>Number of Rooms: ".count($room_nos). "</p>",
+        'arrival_time'=>"<p>Arrival Time: ".$arr_time. "</p>",
+        'booking_id'=>"<p>Booking ID: ".$booking_id. "</p>"
+        );
+       
+    wp_send_json_success($bookingResponse);
     
    
-    die();
+    //die();
 
   }
   add_action('wp_ajax_nopriv_moh_ajax_action_guest_info', 'moh_ajax_guest_info');
   add_action('wp_ajax_moh_ajax_action_guest_info', 'moh_ajax_guest_info');
+        
+//get arrival, departure date,room no from localStorage
+  add_action('wp_ajax_nopriv_moh_ajax_action_get_details', 'moh_ajax_get_details');
+  add_action('wp_ajax_moh_ajax_action_get_details', 'moh_ajax_get_details');
+
+  //for bookroom, get room no id from localStorage via global.js ajax
+  function moh_ajax_get_details(){
+    if(! check_ajax_referer('wp_rooms_action', 'security_rm')){
+       // echo "nonce notok";
+        wp_send_json_error('ajax referer fail' );
+    }
+
+
+   
+    echo "<p>booking rm_id " . $rm_no . " " . $the_actual_room . " from ";
+    echo $_POST['arr'] . " until ";
+    echo $_POST['dep'] . "</p>";
+
+    die();
+    }
+
+
+/*NEW FRIDAY */
+add_action('wp_ajax_nopriv_moh_booking_data_action', 'moh_booking_data_action');
+add_action('wp_ajax_moh_booking_data_action', 'moh_booking_data_action');
+function moh_booking_data_action(){
+
+  // todo check nonce
+
+  if(isset ($_POST['data']['arr'])){
+  
+    $data_rm_nums = $_POST['data']['rm_nums'];
+     $bookingResponse = array();
+ 
+      list($r1, $r2, $r3, $r4) =  $data_rm_nums;
+      $real_room_array = array();
+      for($i=0;$i<count($data_rm_nums);$i++){
+        $rm_i = $data_rm_nums[$i];
+        $real_room = $wpdb->get_results("SELECT actual_rm_no from wp_rooms where rm_id = '$rm_i'");
+        array_push($real_room_array, $real_room);
+      }
+     //}
+wp_send_json_success( "hello marie" . $data_rm_nums .$r1 . $r2 . $r3 . $r4 .$real_room_array);
+    echo '<pre>'; var_dump($data_rm_nums);
+    echo "</pre>";
+
+//}
+  
+  }else{
+    echo "bad friday";
+  }
+}
 
 
 
 
-
+/*END NEW FRIDAY*/
 
 
 
@@ -296,9 +369,11 @@ function update(){
 function widget($args, $instance){
    ?>
     <div class="widget check-avail">
-      <h4>Marie Book Now</h4>
+      <h4>Booking Widget</h4>
       <?php include 'moh-index.php';?>
+      <!--
        <input type="hidden" name="action" value="moh_ajax_action" />
+     -->
 
 
     </div>
