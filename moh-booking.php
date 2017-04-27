@@ -12,6 +12,7 @@ if( ! defined( 'ABSPATH')){
 }
 require (plugin_dir_path(__FILE__) . 'admin/moh-room-fields.php');
 require (plugin_dir_path(__FILE__) . 'admin/moh-rooms-custom-post.php');
+require (plugin_dir_path(__FILE__) . 'admin/moh-manage-bookings.php');
 
 ///////////////////////////////
 ////////Enqueue Scripts///////
@@ -20,7 +21,9 @@ require (plugin_dir_path(__FILE__) . 'admin/moh-rooms-custom-post.php');
 function moh_admin_enqueue_scripts(){
 
   wp_enqueue_style( 'moh_enqueue_style', plugins_url('public/css/moh-style.css', __FILE__ ) );
+  wp_enqueue_style( 'moh_enqueue_admin_style', plugins_url('admin/css/moh-admin.css', __FILE__ ) );
   wp_enqueue_style('jquery-style', 'https:/e/ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
+   wp_register_script( 'moh_admin_js', plugin_dir_url( __FILE__).'/admin/js/moh-admin.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
   wp_register_script( 'moh_main_js', plugin_dir_url( __FILE__).'/public/js/moh-main.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
   wp_localize_script('moh_main_js', 'myAjax', array(
       'security' => wp_create_nonce('moh_check_avail'),
@@ -31,6 +34,7 @@ function moh_admin_enqueue_scripts(){
       ));
   wp_enqueue_script('jquery');
   wp_enqueue_script('moh_main_js');
+   wp_enqueue_script('moh_admin_js');
 }
 add_action('init', 'moh_admin_enqueue_scripts' );
 
@@ -195,22 +199,7 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
               
             }
     }
-    // wp_send_json_success( $arr, $dep, $fn,$ln);
-     //wp_send_json_success($actual_rooms_array);
-//var_dump($actual_rooms_array);
 
-
-
-//OLD CODE, FOR ONLY ALLOWED TO BOOK ONE ROOM PER TRANSACTION
- /////////////////////
-// global $wpdb,$wp_query;;
-// $sql = "SELECT actual_rm_no from wp_rooms where rm_id = '$room_no'";
-// $get_room = $wpdb->get_results($sql);
-// if($get_room){echo "got room";}else{echo "didn't get room";}
-// foreach($get_room as $the_room){
-//           $the_actual_room = $the_room->actual_rm_no;
-//         }
-/////////////////////////
 
 //ADD GUEST INFORMATION TO DB
     global $wpdb, $wp_query;
@@ -230,14 +219,8 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
 
      if($add_guest){
      
-      //wp_send_json_success("added" );
-       //$availResponse[] = array(
-      // echo $fn . " added, guest id is (secret) " . $guest;
-      // echo "<p>arr: " . $arr . "</p>";
-      // echo "<p>dep: ".$dep."</p>";
-      // echo "<p>guest: ".$guest."</p>";
      }else{
-      echo $fn . " not added";
+      wp_send_json_error("<p>Something Went Wrong.</p>" );
      }
     
    
@@ -257,14 +240,12 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
       ));
          if($book_query){
         $booking_id = $wpdb->insert_id;
-        //array_push($confirm_booking, $wpdb->insert_id)
-        //echo "booking id is: " . $booking_id . "<br>";
-        //echo "booked";
+        
         
        }
        else{
-        //echo "not booked";
-        wp_send_json_error("not booked" );
+      
+        wp_send_json_error("<p>Something went wrong with your booking.</p>" );
        }
           
     }
@@ -287,62 +268,58 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
   add_action('wp_ajax_nopriv_moh_ajax_action_guest_info', 'moh_ajax_guest_info');
   add_action('wp_ajax_moh_ajax_action_guest_info', 'moh_ajax_guest_info');
         
-//get arrival, departure date,room no from localStorage
-  add_action('wp_ajax_nopriv_moh_ajax_action_get_details', 'moh_ajax_get_details');
-  add_action('wp_ajax_moh_ajax_action_get_details', 'moh_ajax_get_details');
 
-  //for bookroom, get room no id from localStorage via global.js ajax
-  function moh_ajax_get_details(){
-    if(! check_ajax_referer('wp_rooms_action', 'security_rm')){
-       // echo "nonce notok";
-        wp_send_json_error('ajax referer fail' );
-    }
+//////////////////////////////////////////////////////
+////////      Add Bookings Submenu Page      /////////
+//////////////////////////////////////////////////////
+function moh_add_submenu_bookings(){
 
+  add_submenu_page( 
+                    'edit.php?post_type=room',
+                    'Manage Bookings',//$page_title, 
+                    'Manage Bookings',//$menu_title, 
+                    'manage_options',//$capability, 
+                    'manage_bookings',//$menu_slug, 
+                    'manage_bookings_callback'//$function see admin/moh-manage-bookings.php
+    );
 
-   
-    echo "<p>booking rm_id " . $rm_no . " " . $the_actual_room . " from ";
-    echo $_POST['arr'] . " until ";
-    echo $_POST['dep'] . "</p>";
-
-    die();
-    }
-
-
-/*NEW FRIDAY */
-add_action('wp_ajax_nopriv_moh_booking_data_action', 'moh_booking_data_action');
-add_action('wp_ajax_moh_booking_data_action', 'moh_booking_data_action');
-function moh_booking_data_action(){
-
-  // todo check nonce
-
-  if(isset ($_POST['data']['arr'])){
-  
-    $data_rm_nums = $_POST['data']['rm_nums'];
-     $bookingResponse = array();
- 
-      list($r1, $r2, $r3, $r4) =  $data_rm_nums;
-      $real_room_array = array();
-      for($i=0;$i<count($data_rm_nums);$i++){
-        $rm_i = $data_rm_nums[$i];
-        $real_room = $wpdb->get_results("SELECT actual_rm_no from wp_rooms where rm_id = '$rm_i'");
-        array_push($real_room_array, $real_room);
-      }
-     //}
-wp_send_json_success( "hello marie" . $data_rm_nums .$r1 . $r2 . $r3 . $r4 .$real_room_array);
-    echo '<pre>'; var_dump($data_rm_nums);
-    echo "</pre>";
-
-//}
-  
-  }else{
-    echo "bad friday";
-  }
 }
+add_action('admin_menu', 'moh_add_submenu_bookings' );
 
 
 
 
-/*END NEW FRIDAY*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
