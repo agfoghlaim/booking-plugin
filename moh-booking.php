@@ -287,12 +287,76 @@ function moh_add_submenu_bookings(){
 add_action('admin_menu', 'moh_add_submenu_bookings' );
 
 
+///////////////////////////////////////////////////////////////////////
+/////////////////                  ADMIN          /////////////////////
+///////////////////////////////////////////////////////////////////////
+//THE FOLLOWING ID TO DISPLAY BOOKING INFO AUTOMATICALLY ON ADMIN CALENDAR
+
+//for calendar in moh-manage-bookings.php, see moh-admin.js-getAdminData();
+//get bookings' details
 
 
 
+function moh_send_admin_data(){
+ if(!isset($_POST['data']['month']) || !isset($_POST['data']['year']) || !isset($_POST['data']['days_in_month'])){
+  //$mohTheMonth = $_POST['data']['month'];
+  wp_send_json_error("Sorry could not retrieve requested data");
+  }
+
+ // more checks here
+
+  $day_num = 01;
+  $days_in_month = $_POST['data']['days_in_month'];
+  $year = $_POST['data']['year'];
+  $month = $_POST['data']['month'];
+
+  //vars for query
+  global $wpdb;
+  $rooms= $wpdb->prefix.'rooms';
+  $bookings= $wpdb->prefix.'bookings';
+   $guests= $wpdb->prefix.'guests';
+
+  while($day_num <= $days_in_month){
+      $date= date_create($year."-".$month."-".$day_num);
+      $arrive = date_format($date,"Y-m-d");
+      $date1 = str_replace('-', '/', $arrive);
+      $depart = date('Y-m-d',strtotime($date1 . "+1 days"));
+
+      ///
+      $prepared_query = $wpdb->prepare(
+        "SELECT room_no , fname, lname, address, email, country, $guests.no_adults, $guests.no_children, arrival,  booking_id, $bookings.guest_id, checkin
+        FROM $bookings, $guests 
+          WHERE $bookings.guest_id = $guests.guest_id 
+          AND checkin < %s
+           AND checkout > %s" , $depart, $arrive);
+
+      $avail = $wpdb->get_results($prepared_query);
+        foreach($avail as $available){
+          $adminResponse[] = array(
+            "data_arr_date" => $arrive,
+            "data_dep_date"=>$depart,
+            "data_room_num" =>  $available->room_no,
+            "data_guest_id" => $available->guest_id,
+             "data_guest_name" => $available->fname,
+             "data_booking_id"=>$available->booking_id,
+             "arr_date" => "<p>Check In: ".$arrive."</p>",
+            "dep_date"=>"<p>Check Out: ".$depart."</p>",
+            "room_num" =>"<p>Room No: ".$available->room_no."<p>",
+            "guest_id" =>"<p>Guest Id: ". $available->guest_id."</p>",
+             "guest_name" =>"<p>Name: " .$available->fname. "</p>",
+             "booking_id"=>"<p>Booking ID: " . $available->booking_id . "</p>"
+
+          );
+        }
+      $day_num ++;
+  }
+
+  wp_send_json_success($adminResponse);
 
 
-
+}
+add_action('wp_ajax_moh_send_admin_data', 'moh_send_admin_data');
+add_action('wp_ajax_nopriv_moh_send_admin_data', 'moh_send_admin_data');
 
 
 

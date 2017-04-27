@@ -79,9 +79,11 @@ body {font-family: Verdana,sans-serif;}
     .weekdays li, .days li {width: 12.2%;}
 }
 
+.date-class{
+    border: 1px solid black;
+   
 
-
-
+}
 
 
 
