@@ -2,6 +2,13 @@
 ul {list-style-type: none;}
 body {font-family: Verdana,sans-serif;}
 
+.moh-room-class-booked{
+    background-color: blue;
+}
+.moh-room-class-notbooked{
+visibility: hidden;
+}
+
 .month {
     padding: 70px 25px;
     width: 100%;
@@ -38,7 +45,11 @@ body {font-family: Verdana,sans-serif;}
 
 .weekdays li {
     display: inline-block;
+   
     width: 13.6%;
+    /*
+    width: 10vw;
+    */
     color: #666;
     text-align: center;
 }
@@ -52,6 +63,11 @@ body {font-family: Verdana,sans-serif;}
 .days li {
     list-style-type: none;
     display: inline-block;
+    /*
+    
+    width: 10vw;
+    height: 10vw;
+    */
     width: 13.6%;
     text-align: center;
     margin-bottom: 5px;
@@ -64,19 +80,27 @@ body {font-family: Verdana,sans-serif;}
     background: #1abc9c;
     color: white !important
 }
+.days li p {
+   
+    display: table-row;
+}
+
 
 /* Add media queries for smaller screens */
 @media screen and (max-width:720px) {
     .weekdays li, .days li {width: 13.1%;}
+    .days li p {font-size: .8em;}
 }
 
 @media screen and (max-width: 420px) {
     .weekdays li, .days li {width: 12.5%;}
     .days li .active {padding: 2px;}
+    .days li p {font-size: .8em;}
 }
 
 @media screen and (max-width: 290px) {
     .weekdays li, .days li {width: 12.2%;}
+    .days li p {font-size: .8em;}
 }
 
 .date-class{

@@ -294,7 +294,37 @@ add_action('admin_menu', 'moh_add_submenu_bookings' );
 
 //for calendar in moh-manage-bookings.php, see moh-admin.js-getAdminData();
 //get bookings' details
+function moh_send_admin_data_ids(){
+//if(!isset($_POST['data']['month']) || !isset($_POST['data']['year']) || !isset($_POST['data']['days_in_month'])){
+  //$mohTheMonth = $_POST['data']['month'];
+  //wp_send_json_error("Sorry could not retrieve requested data");
+  //}
+  global $wpdb;
+  //get all rooms in db
+  $rooms= $wpdb->prefix.'rooms';
+  $get_total_number_of_rooms = $wpdb->get_results("SELECT actual_rm_no FROM $rooms;");
+  $total_number_of_rooms = $wpdb->num_rows;
+    foreach($get_total_number_of_rooms as $get_names_of_all_rooms){
+      $names_of_all_rooms[] = $get_names_of_all_rooms->actual_rm_no;
+    }
+    $adminResponseIds = array(
+    "names_of_all_rooms" => $names_of_all_rooms
+    );
 
+  wp_send_json_success($adminResponseIds);
+}
+
+add_action('wp_ajax_moh_send_admin_data_ids', 'moh_send_admin_data_ids');
+add_action('wp_ajax_nopriv_moh_send_admin_data_ids', 'moh_send_admin_data_ids');
+
+
+
+
+//  function moh_get_all_rooms_booked_today(){
+
+//   }
+//   add_action('wp_ajax_moh_get_all_rooms_booked_today', 'moh_get_all_rooms_booked_today');
+// add_action('wp_ajax_nopriv_moh_get_all_rooms_booked_today', 'moh_get_all_rooms_booked_today');
 
 
 function moh_send_admin_data(){
@@ -302,6 +332,9 @@ function moh_send_admin_data(){
   //$mohTheMonth = $_POST['data']['month'];
   wp_send_json_error("Sorry could not retrieve requested data");
   }
+
+
+
 
  // more checks here
 
@@ -397,21 +430,10 @@ add_action('wp_ajax_nopriv_moh_send_admin_data', 'moh_send_admin_data');
 
 
 
-function moh_send_admin_data_ids(){
-  global $wpdb;
-   $rooms = $wpdb->prefix.'rooms';
-          $get_rooms_in_db = $wpdb->get_results( $wpdb->prepare(
-            "SELECT * from $rooms"));
-    foreach($get_rooms_in_db as $rooms_in_db){
-      $all_rooms_in_db[] = $rooms_in_db->actual_rm_no;
-    }
-    wp_send_json_success($all_rooms_in_db );
-
-}
 
 
-add_action('wp_ajax_moh_send_admin_data_ids', 'moh_send_admin_data_ids');
-add_action('wp_ajax_nopriv_moh_send_admin_data_ids', 'moh_send_admin_data_ids');
+
+
 
 
 

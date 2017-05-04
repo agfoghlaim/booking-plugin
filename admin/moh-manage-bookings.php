@@ -6,14 +6,13 @@
 function manage_bookings_callback(){
 ?>
 		<div class="month"> 
-
-		  <ul>
-		    <li class="prev" id="prevMonth">&#10094;</li>
-		    <li class="next" id="nextMonth">&#10095;</li>
-		    <li style="text-align:center"id="display-month">
-		     
-		      <li style="font-size:18px;text-align:center" id="display-year"></li>
-		  </ul>
+			<ul>
+			    <li class="prev" id="prevMonth">&#10094;</li>
+			    <li class="next" id="nextMonth">&#10095;</li>
+			    <li style="text-align:center"id="display-month">
+			     
+			     <li style="font-size:18px;text-align:center" id="display-year"></li>
+		  	</ul>
 		</div>
 		<div id="marieDiv"></div>  
 
