@@ -139,15 +139,21 @@ next.addEventListener('click', function(){
 							},
 							success:function(response){
 								var roomNumP;
-								var bookingInfoD;
-								for(i in response.data){
 								
+								for(i in response.data){
+									var bookingInfoStr = "";
 									roomNumP = document.getElementById(response.data[i].data_arr_date+"-"+response.data[i].data_room_num);
 									theID = response.data[i].data_arr_date+"-"+response.data[i].data_room_num;
 									roomNumP.innerHTML= response.data[i].data_room_num;
+									for(j in response.data[i].names_of_all_rooms ){
+										console.log("QQQQQQQQQQ" + response.data[i].names_of_all_rooms[j]);
+										roomNumP.setAttribute('class', 'moh-booked-room');
+									}
+									roomNumP.setAttribute('class', 'moh-booked-room');
+									//.moh-booked-room
 									console.log(response.data[i].data_arr_date + " " + response.data[i].data_room_num + i );
 									// roomNumP.addEventListener('click',function(e){
-									bookingInfoD = document.getElementById('bookingInformation');
+									bookingInfoD = $('#bookingInformation');
 									// 	//var target = e.target;
 									// 	bookingInfoStr = "";
 									// 	bookingInfoStr += response.data[i].data_guest_id + response.data[i].data_guest_name + "</p>";
@@ -157,12 +163,20 @@ next.addEventListener('click', function(){
 									// });
 									function addEvent(i){
 									$(document).on("click", "#"+theID, function(e) {
+										bookingInfoStr = "";
+										bookingInfoStr2 = "";
+										bookingInfoD.html("");
 										var currentId = $(this).attr('id');
 										console.log("eee" +currentId + " "+ i);
 										console.log(response.data[i].data_arr_date);
-										bookingInfoStr = "";
-										bookingInfoStr += response.data[i].data_guest_id + response.data[i].data_guest_name + "</p>";
-										bookingInfoStr += response.data[i].data_arr_date + " " + response.data[i].data_room_num;
+										bookingInfoStr += "<p><b>";
+										bookingInfoStr += "Check In Date: </b>" + response.data[i].checkin + "</p><hr>";
+										bookingInfoStr += "<p><b> Check Out Date: </b>" + response.data[i].checkout + "</p><hr>";
+										bookingInfoStr += "<p><b>Booking ID: </b>" + response.data[i].data_booking_id+"</p><hr>";
+										bookingInfoStr += "<p><b>Guest ID: </b>" +response.data[i].data_guest_id + "</p><hr>";
+										bookingInfoStr += "<p><b>Guest Name: </b>"+ response.data[i].data_guest_name+"</p><hr>";
+										bookingInfoStr += "<p><b>Room Number: </b>" + response.data[i].data_room_num + "</p><hr>";
+										bookingInfoStr += "<p><b>Estimated Arrival: </b>" + response.data[i].data_arrival_time + "</p>";
 										bookingInfoD.append(bookingInfoStr);
 										
 									});

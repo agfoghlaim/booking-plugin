@@ -333,7 +333,7 @@ function moh_send_admin_data(){
 
       ///
       $prepared_query = $wpdb->prepare(
-        "SELECT distinct room_no , fname, lname, address, email, country, $guests.no_adults, $guests.no_children, arrival,  booking_id, $bookings.guest_id, checkin
+        "SELECT checkin, checkout, room_no , fname, lname, address, email, country, $guests.no_adults, $guests.no_children, arrival,  booking_id, $bookings.guest_id, checkin
         FROM $bookings, $guests 
           WHERE $bookings.guest_id = $guests.guest_id 
           AND checkin < %s
@@ -363,7 +363,8 @@ function moh_send_admin_data(){
           //   }
           $adminResponse[] = array(
            "all_rooms_booked_today"=>$all_rooms_booked_today,
-
+           "checkin"=>$available->checkin,
+           "checkout"=>$available->checkout,
             "number_of_bookings"=> $number_of_bookings,
             "names_of_all_rooms" => $names_of_all_rooms,
             "total_number_of_rooms" =>$total_number_of_rooms,
@@ -371,13 +372,14 @@ function moh_send_admin_data(){
             "data_dep_date"=>$depart,
             "data_room_num" =>  $available->room_no,
             "data_guest_id" => $available->guest_id,
-             "data_guest_name" => $available->fname,
+             "data_guest_name" =>  $available->fname." ".$available->lname ,
              "data_booking_id"=>$available->booking_id,
+             "data_arrival_time"=>$available->arrival,
              "arr_date" => "<p>Check In: ".$arrive."</p>",
             "dep_date"=>"<p>Check Out: ".$depart."</p>",
             "room_num" =>"<p>".$available->room_no."</p>",
             "guest_id" =>"<p>Guest Id: ". $available->guest_id."</p>",
-             "guest_name" =>"<p>Name: " .$available->fname. "</p>",
+             "guest_name" =>"<p><b>Name: </b>" .$available->fname." ".$available->lname. "</p>",
              "booking_id"=>"<p>Booking ID: " . $available->booking_id . "</p>"
 
           );
