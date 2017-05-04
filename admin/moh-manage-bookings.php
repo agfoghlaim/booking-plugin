@@ -14,7 +14,8 @@ function manage_bookings_callback(){
 			     <li style="font-size:18px;text-align:center" id="display-year"></li>
 		  	</ul>
 		</div>
-		<div id="marieDiv"></div>  
+		<div id="marieDiv"></div> 
+		<div id="bookingInformation"></div> 
 
 
 

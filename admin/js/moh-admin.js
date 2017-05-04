@@ -138,19 +138,38 @@ next.addEventListener('click', function(){
 								
 							},
 							success:function(response){
-								//var marie = document.getElementById("2017-05-03-102");
-								//marie.innerHTML = "hi";
+								var roomNumP;
+								var bookingInfoD;
 								for(i in response.data){
-									//console.log(response.data.length);
-									
-									
-									document.getElementById(response.data[i].data_arr_date+"-"+response.data[i].data_room_num).innerHTML= response.data[i].data_room_num;
+								
+									roomNumP = document.getElementById(response.data[i].data_arr_date+"-"+response.data[i].data_room_num);
+									theID = response.data[i].data_arr_date+"-"+response.data[i].data_room_num;
+									roomNumP.innerHTML= response.data[i].data_room_num;
+									console.log(response.data[i].data_arr_date + " " + response.data[i].data_room_num + i );
+									// roomNumP.addEventListener('click',function(e){
+									bookingInfoD = document.getElementById('bookingInformation');
+									// 	//var target = e.target;
+									// 	bookingInfoStr = "";
+									// 	bookingInfoStr += response.data[i].data_guest_id + response.data[i].data_guest_name + "</p>";
+									// 	bookingInfoStr += response.data[i].data_arr_date + " " + response.data[i].data_room_num;
+									// 	bookingInfoD.append(bookingInfoStr);
+
+									// });
+									function addEvent(i){
+									$(document).on("click", "#"+theID, function(e) {
+										var currentId = $(this).attr('id');
+										console.log("eee" +currentId + " "+ i);
+										console.log(response.data[i].data_arr_date);
+										bookingInfoStr = "";
+										bookingInfoStr += response.data[i].data_guest_id + response.data[i].data_guest_name + "</p>";
+										bookingInfoStr += response.data[i].data_arr_date + " " + response.data[i].data_room_num;
+										bookingInfoD.append(bookingInfoStr);
+										
+									});
+									}
+									addEvent(i);
 								}
-								// $.each(response.data, function () {
-								//    $.each(this, function (name, value) {
-								//       console.log(name + '=' + value);
-								//    });
-								// });
+							
 								//alert(marie);
 								// function makeStuff(name, id, content, appendTo){
 								//   var el;
@@ -215,14 +234,7 @@ next.addEventListener('click', function(){
 		while(day_num <= days_in_month-1){
 		day_num++;
 		dateForId = year + "-" + pad(month+1,2) +"-"+ pad(day_num,2);
-		/*
-		theString += "<li class='date-class' id='" + dateForId + "'>" +  day_num  +"<div style='display:none' id='div-" +dateForId + "'></div></li>";
-		*/
-		
-		
-
-//getAllRooms();
-//console.log("we are here "+ gotRooms);
+	
 		theString += "<li class='date-class' id='" + dateForId + "'>" +  day_num ;
 		//getAdminDataIdsResponse is list of all rooms in db, see ajax fn getAdminDataIds below
 			for(i in gotRooms){
@@ -299,28 +311,28 @@ next.addEventListener('click', function(){
 	// }
 
 	//ajax to click on individual calendar dates
-	$(document).on("click", ".date-class", function(e) {
-		var currentId = $(this).attr('id');
-		console.log(currentId);
-		//var action = 'moh_send_admin_data';
-		// $.ajax({
-		// 	type:'POST',
-		// 	dataType: 'JSON',
-		// 	url: ajaxurl,
-		// 	data: {
-		// 		action: action,
-		// 		data: data,
+	// $(document).on("click", ".date-class", function(e) {
+	// 	var currentId = $(this).attr('id');
+	// 	console.log("eee" +currentId);
+	// 	//var action = 'moh_send_admin_data';
+	// 	// $.ajax({
+	// 	// 	type:'POST',
+	// 	// 	dataType: 'JSON',
+	// 	// 	url: ajaxurl,
+	// 	// 	data: {
+	// 	// 		action: action,
+	// 	// 		data: data,
 				
-		// 	},
-		// 	success: function(response){
+	// 	// 	},
+	// 	// 	success: function(response){
 					
 					
-		// 	},
-		// 	error: function(response){
-		// 		//
-		// 	}
-		// });
-	});
+	// 	// 	},
+	// 	// 	error: function(response){
+	// 	// 		//
+	// 	// 	}
+	// 	// });
+	// });
 
 
 
