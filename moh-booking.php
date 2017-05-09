@@ -13,6 +13,7 @@ if( ! defined( 'ABSPATH')){
 require (plugin_dir_path(__FILE__) . 'admin/moh-room-fields.php');
 require (plugin_dir_path(__FILE__) . 'admin/moh-rooms-custom-post.php');
 require (plugin_dir_path(__FILE__) . 'admin/moh-manage-bookings.php');
+require_once('vendor/autoload.php');
 
 ///////////////////////////////
 ////////Enqueue Scripts///////
@@ -21,9 +22,13 @@ require (plugin_dir_path(__FILE__) . 'admin/moh-manage-bookings.php');
 function moh_admin_enqueue_scripts(){
 
   wp_enqueue_style( 'moh_enqueue_style', plugins_url('public/css/moh-style.css', __FILE__ ) );
+  //admin css is specifically for calendar
+  global $pagenow, $typenow;
+  if($pagenow == 'edit.php' || $typenow == 'room'){
   wp_enqueue_style( 'moh_enqueue_admin_style', plugins_url('admin/css/moh-admin.css', __FILE__ ) );
-  wp_enqueue_style('jquery-style', 'https:/e/ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
-   wp_register_script( 'moh_admin_js', plugin_dir_url( __FILE__).'/admin/js/moh-admin.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
+  }
+  wp_enqueue_style('jquery-style', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
+  wp_register_script( 'moh_admin_js', plugin_dir_url( __FILE__).'/admin/js/moh-admin.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
   wp_register_script( 'moh_main_js', plugin_dir_url( __FILE__).'/public/js/moh-main.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
   wp_localize_script('moh_main_js', 'myAjax', array(
       'security' => wp_create_nonce('moh_check_avail'),
@@ -42,6 +47,18 @@ add_action('init', 'moh_admin_enqueue_scripts' );
 //////////   Availabity   ////////////
 //////////////////////////////////////
 /*
+Default Wordpress - no javaScript
+*/
+
+function moh_avail_default(){
+  echo "<h1>DEFAULT ACTION</h1>";
+
+}
+add_action( 'admin_post_nopriv_moh_avail_default', 'moh_avail_default' );
+add_action( 'admin_post_moh_avail_default', 'moh_avail_default' );
+
+
+/*
 For Availabity Form Validation
 */
 function moh_check_date_format($the_date){
@@ -58,6 +75,7 @@ Availabity Ajax Response
 */
 function moh_check_avail_action(){
   //check honey
+  
 
   if(!empty($_POST['submission'])){
     wp_send_json_error('Nice try.');
@@ -133,6 +151,7 @@ function moh_check_avail_action(){
                 "room_number"=>"<p>Room Number: ".$the_room->actual_rm_no."</p>",
                 "room_description"=>"<p>Description: ".$the_room->rm_desc."<p>",
                 "room_rate"=>"<h5>Nightly Rate ".$the_room->amt_per_night."</h5>",
+                "data_room_rate"=>$the_room->amt_per_night,
                 "room_id"=>$the_room->rm_id,
                 "room_thumbnail"=>$room_pic, //sending the whole image tag
                 "room_book_button"=> "<button class='get-the-room' name='add-".$the_room->rm_id . "'  id='add-".$the_room->rm_id . "' value='".$the_room->rm_id . "'>select room</button>",
@@ -164,25 +183,27 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
     if(!isset($_POST['data']['checkin'])){
       wp_send_json_error( "not set");
     }
-    else{
-      //wp_send_json_success(" $data" );
-    }
-    //array to send response data
-    //$bookingResponse[];
-    $arr = $_POST['data']['checkin'];
-    $dep = $_POST['data']['checkout'];
-    $fn=$_POST['data']['fname'];
-    $ln=$_POST['data']['lname'];
-    $em=$_POST['data']['email'];
-    $ad=$_POST['data']['address'];
-    $country=$_POST['data']['country'];
-    $phone=$_POST['data']['phone'];
-    $postcode=$_POST['data']['postcode'];
-    $adults=$_POST['data']['no_adults'];
-    $children =$_POST['data']['no_children'];
-    $arr_time=$_POST['data']['arr_time'];
-    $room_no = $_POST['data']['rm_num'];
-    $room_nos = $_POST['data']['rm_nums'];
+    
+ 
+    $arr = sanitize_text_field($_POST['data']['checkin']);
+    $dep = sanitize_text_field($_POST['data']['checkout']);
+    $nights = $_POST['data']['num_nights'];
+    $cArr=strtotime($arr);
+    $cDep=strtotime($dep);
+    $checkNights = ($cDep-$cArr)/(60*60*24);
+  
+    $fn=sanitize_text_field($_POST['data']['fname']);
+    $ln=sanitize_text_field($_POST['data']['lname']);
+    $em=sanitize_text_field($_POST['data']['email']);
+    $ad=sanitize_text_field($_POST['data']['address']);
+    $country=sanitize_text_field($_POST['data']['country']);
+    $phone=sanitize_text_field($_POST['data']['phone']);
+    $postcode=sanitize_text_field($_POST['data']['postcode']);
+    $adults=sanitize_text_field($_POST['data']['no_adults']);
+    $children =sanitize_text_field($_POST['data']['no_children']);
+    $arr_time=sanitize_text_field($_POST['data']['arr_time']);
+    $room_no = sanitize_text_field($_POST['data']['rm_num']);
+    $room_nos = sanitize_text_field($_POST['data']['rm_nums']);
 
     //GET ACTUAL ROOM NUMBERS (IE NOT WP ROOM POST ID).
     // PUT ACTUAL ROOM NUMBERS IN $actual_rooms_array
@@ -191,7 +212,7 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
     $actual_rooms_array = array();
     foreach($room_nos as $room_no){
            
-            $get_rms = $wpdb->get_results("SELECT actual_rm_no from wp_rooms where rm_id = '$room_no'");
+            $get_rms = $wpdb->get_results("SELECT actual_rm_no, amt_per_night from wp_rooms where rm_id = '$room_no'");
             //$rowCount = mysqli_num_rows(${'r_'.$room_no});
             foreach($get_rms as $get_rm){
               //echo $get_rm->actual_rm_no;
@@ -200,6 +221,10 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
             }
     }
 
+//calculate cost of stay
+ // function calculate_cost(rooms, nights){
+
+ // }
 
 //ADD GUEST INFORMATION TO DB
     global $wpdb, $wp_query;
@@ -256,7 +281,10 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
         'guest_name'=>"<p>Name: ".$fn." ".$ln. "</p>",
         'num_rooms'=>"<p>Number of Rooms: ".count($room_nos). "</p>",
         'arrival_time'=>"<p>Arrival Time: ".$arr_time. "</p>",
-        'booking_id'=>"<p>Booking ID: ".$booking_id. "</p>"
+        'booking_id'=>"<p>Booking ID: ".$booking_id. "</p>",
+        'nights'=>"<p>Nights: ". $nights ."</p>",
+        'chnights'=>"<p>Ch Nights: ".$checkNights."</p>",
+
         );
        
     wp_send_json_success($bookingResponse);

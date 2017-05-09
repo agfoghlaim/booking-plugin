@@ -9,7 +9,7 @@
 		<input type="hidden" value="moh_avail_default" name="action">
 	-->
 		<label>Arrive:</label> 
-		<input class="d" type="date" id="arrive" name="arrive">
+		<input class="datepicker" type="date" id="arrive" name="arrive">
 		<label>Depart:</label> 
 		<input class="datepicker" type="date" id="depart" name="depart">
 		<label>Nights:</label> 
@@ -17,6 +17,14 @@
 		<input type="submit" id="date-submit" name="avail-submit" value="Check Dates">
 		<input type="text" id="xyz" style="display:none" name="<?php echo apply_filters( 'honey', 'date-submitted'); ?>" value="">
 		<input type="submit" id="test-submit"  value="Test Check Dates">
+		<!--start of switch to dropdown selection 
+		<label>Day</label>
+		<input type="number" id="day" name="day" min="1" max="31">
+		<label>Month</label>
+		<input type="number" id="day" name="day">
+		<label>Year</label>
+		<input type="number" id="day" name="day">
+		 of switch to dropdown selection  -->
 		</form>
 		<div id="date-data"></div>
 		<p id="arr-err"></p>

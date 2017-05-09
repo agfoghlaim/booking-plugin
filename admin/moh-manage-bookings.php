@@ -4,9 +4,14 @@
 // var_dump($pagenow);
 
 function manage_bookings_callback(){
+	global $pagenow, $typenow;
+	var_dump($pagenow);
+		var_dump($typenow);
+
 ?>
 		<div class="month"> 
 			<ul>
+
 			    <li class="prev" id="prevMonth">&#10094;</li>
 			    <li class="next" id="nextMonth">&#10095;</li>
 			    <li style="text-align:center"id="display-month">
