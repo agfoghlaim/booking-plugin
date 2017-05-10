@@ -13,18 +13,24 @@ if( ! defined( 'ABSPATH')){
 require (plugin_dir_path(__FILE__) . 'admin/moh-room-fields.php');
 require (plugin_dir_path(__FILE__) . 'admin/moh-rooms-custom-post.php');
 require (plugin_dir_path(__FILE__) . 'admin/moh-manage-bookings.php');
+//require (plugin_dir_path(__FILE__) . 'public/testPage.php');
 require_once('vendor/autoload.php');
 
 ///////////////////////////////
 ////////Enqueue Scripts///////
 //////////////////////////////
+$stripe = [
+'publish'=>'pk_test_vjCqdUzDseC6Gmko8HO8ZZcA',
+'private'=> 'sk_test_ZmA7m9ZpVReJH7yFrlyL4wkL'
+];
+//echo "<h1>". $stripe['publish']."</h1>";
 
 function moh_admin_enqueue_scripts(){
 
   wp_enqueue_style( 'moh_enqueue_style', plugins_url('public/css/moh-style.css', __FILE__ ) );
   //admin css is specifically for calendar
   global $pagenow, $typenow;
-  if($pagenow == 'edit.php' || $typenow == 'room'){
+  if($pagenow == 'edit.php'){
   wp_enqueue_style( 'moh_enqueue_admin_style', plugins_url('admin/css/moh-admin.css', __FILE__ ) );
   }
   wp_enqueue_style('jquery-style', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
@@ -174,6 +180,50 @@ add_action('wp_ajax_nopriv_moh_check_avail_action', 'moh_check_avail_action'  );
 
 
 /*===================for book individual room page================ */
+//get room rates for summary table on booking page
+function moh_summary_table_info(){
+
+   //$nights = $_POST['data']['num_nights'];
+    $cArr=strtotime($arr);
+    $cDep=strtotime($dep);
+    $checkNights = ($cDep-$cArr)/(60*60*24);
+
+  $room_nos = $_POST['data']['selectedRooms'];
+  $arr = sanitize_text_field($_POST['data']['arr']);
+  $dep = sanitize_text_field($_POST['data']['dep']);
+  $cArr=strtotime($arr);
+  $cDep=strtotime($dep);
+  $checkNights = ($cDep-$cArr)/(60*60*24);
+  $grand_total = 0;
+  global $wpdb, $wp_query;
+    $rooms= $wpdb->prefix.'rooms';
+  foreach($room_nos as $room_no){
+    $prepare = $wpdb->prepare("SELECT actual_rm_no,amt_per_night from $rooms where rm_id = %d", $room_no);
+    $get_rms = $wpdb->get_results($prepare);
+      foreach($get_rms as $get_rm){
+          $room_cost = ($get_rm->amt_per_night)* $checkNights;
+          $grand_total += $room_cost;
+          $summaryResponse[] = array(
+
+            "rm_no"=>$get_rm->actual_rm_no,
+            "rm_rate"=> $get_rm->amt_per_night,
+            "rm_cost"=> $room_cost,
+            "num_nights"=>$checkNights,
+            
+             );
+   
+       }
+   
+  }
+  //wp_send_json_data($grand_total);
+  array_push($summaryResponse, array("grand_total" =>$grand_total)); 
+  wp_send_json_success($summaryResponse);
+ 
+
+
+}
+add_action('wp_ajax_moh_summary_table_info', 'moh_summary_table_info' );
+add_action('wp_ajax_nopriv_moh_summary_table_info', 'moh_summary_table_info' );
 
   //get guest info from form and add to db
   function moh_ajax_guest_info(){

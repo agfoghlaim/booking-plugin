@@ -226,7 +226,7 @@ function checkDateFormat(theDt){
 /*=================================  BOOKING FORM   ==============================*/
 /*================================================================================*/
 /*
-Booking summary
+Booking summary from localStorage
 */
 
 $('h3#booking-summary-heading').text("You are booking(from localStorage): " );
@@ -236,7 +236,70 @@ $('p#summary-checkout').text("Check Out(from localStorage): " + JSON.parse(local
 $('p#summary-price').text("Total(from localStorage): " + JSON.parse(localStorage.getItem("depart")));
 $('p#summary-nights').text("Nights(from localStorage): " + JSON.parse(localStorage.getItem("numNights")));
 
+/*
+Add booking summary with info from server
+*/
+$('button#moh-confirm-booking-button').on('click', function(e){
+	//var selected_rooms = JSON.parse(localStorage.getItem("selected_rooms"))[0].ids
+	var summaryData = {
+		arr:JSON.parse(localStorage.getItem("arrive")),
+		dep: JSON.parse(localStorage.getItem("depart")),
+		selectedRooms: JSON.parse(localStorage.getItem("selected_rooms"))[0].ids
+	}
+			 $.ajax({
+					type:'POST',
+					dataType: 'json',
+					url: myAjax.ajaxurl,
+					data: {
+						action: 'moh_summary_table_info',
+						data: summaryData,
+						//submission: document.getElementById('xyz').value,
+						security: myAjax.guest_security,
+					},
+					success: function(response){
+						$('div#moh-confirm-booking-table').html('');
+						var rowCounter = 1;
+						makeStuff('table', 'moh-summary-table', false, 'moh-confirm-booking-table' );
+						makeStuff('tr', 'tr-title', false, 'moh-summary-table' );
+						makeStuff('td', 'td-title-rate', 'Nightly Rate', 'tr-title' );
+						makeStuff('td', 'td-title-room', 'Room No', 'tr-title' );
+						makeStuff('td', 'td-title-nights', 'No. Nights', 'tr-title' );
+						makeStuff('td', 'td-title-cost', 'Total Cost', 'tr-title' );
 
+
+						for(i in response.data){
+							makeStuff('tr', 'tr-'+ rowCounter, false, 'moh-summary-table');
+							makeStuff('td', 'td-'+ response.data[i].rm_rate, response.data[i].rm_rate, 'tr-'+rowCounter);
+							makeStuff('td', 'td-'+ response.data[i].rm_no, response.data[i].rm_no, 'tr-'+rowCounter);
+							makeStuff('td', 'td-'+ response.data[i].num_nights, response.data[i].num_nights, 'tr-'+rowCounter);
+							makeStuff('td', 'td-'+ response.data[i].rm_cost, response.data[i].rm_cost, 'tr-'+rowCounter);
+							
+							rowCounter++;
+							
+						}
+						makeStuff('tr', 'tr-'+ rowCounter, false, 'moh-summary-table');
+						makeStuff('td', false, false, 'tr-'+rowCounter);
+						makeStuff('td', false, false, 'tr-'+rowCounter);
+						makeStuff('td', false, false, 'tr-'+rowCounter);
+						makeStuff('td', false, false, 'tr-'+rowCounter);
+						makeStuff('td', 'td-'+ rowCounter, response.data[response.data.length-1].grand_total, 'moh-summary-table');
+						$('h3#moh-grand-total').append(response.data[response.data.length-1].grand_total);
+						//makeStuff('tr', 'tr-grand-total', 'tr-'+rowCounter);
+ 					},
+ 					error: function(response){
+ 						alert("error" + response.error);
+ 					}
+ 				});
+$(this).hide('slow');
+});
+
+
+
+
+
+/*
+Handle guest info form
+*/
  	$(document).on("click", "input#guest-info-form", function(e){
  		e.preventDefault();
  		formGuestInfo();
@@ -326,7 +389,22 @@ $('p#summary-nights').text("Nights(from localStorage): " + JSON.parse(localStora
 	}//END formGuestInfo
 
 
-
+function makeStuff(name, id, content, appendTo){
+  var el;
+  if(name){
+  el = document.createElement(name);
+  }
+  if(id){
+    el.setAttribute('id', id);
+  }
+   if(content){
+    el.appendChild(document.createTextNode(content));
+  }
+   if(appendTo){
+     document.getElementById(appendTo).appendChild(el);
+  }
+  
+}
 
 
 });
