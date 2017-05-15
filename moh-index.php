@@ -38,6 +38,7 @@
         <div class="room-booking-button"></div>
 
 	<?php 
+	
 	//default action for AVAILABITY
 	//ideally use admin_post_action_name and admin_post_nopriv_action_name and change action in above form
 	// function moh_check_date_format($the_date){

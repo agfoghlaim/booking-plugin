@@ -216,6 +216,8 @@ function moh_summary_table_info(){
    
   }
   //wp_send_json_data($grand_total);
+  session_start();
+  $_SESSION['grand_total']= $grand_total;
   array_push($summaryResponse, array("grand_total" =>$grand_total)); 
   wp_send_json_success($summaryResponse);
  
@@ -234,7 +236,7 @@ add_action('wp_ajax_nopriv_moh_summary_table_info', 'moh_summary_table_info' );
       wp_send_json_error( "not set");
     }
     
- 
+ //header('Location: booking-confirmation.php');
     $arr = sanitize_text_field($_POST['data']['checkin']);
     $dep = sanitize_text_field($_POST['data']['checkout']);
     $nights = $_POST['data']['num_nights'];
