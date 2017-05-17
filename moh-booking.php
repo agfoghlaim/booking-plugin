@@ -33,6 +33,11 @@ function moh_admin_enqueue_scripts(){
   if($pagenow == 'edit.php'){
   wp_enqueue_style( 'moh_enqueue_admin_style', plugins_url('admin/css/moh-admin.css', __FILE__ ) );
   }
+  // if(is_page('book-room-101')){
+  //   echo "hi";
+  //   wp_register_script('moh_book_js', plugin_dir_url(__FILE__ ).'/public/js/moh-book.js' );
+  //   wp_enqueue_script('moh_book_js' );
+  // }
   wp_enqueue_style('jquery-style', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
   wp_register_script( 'moh_admin_js', plugin_dir_url( __FILE__).'/admin/js/moh-admin.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
   wp_register_script( 'moh_main_js', plugin_dir_url( __FILE__).'/public/js/moh-main.js',  array('jquery', 'jquery-ui-datepicker'), '1', true );   
@@ -147,7 +152,7 @@ function moh_check_avail_action(){
             foreach($the_rooms as $the_room){
               $rm_id = $the_room->rm_id;
               $room_pic = get_the_post_thumbnail($rm_id,'thumbnail');
-              $actual_rm_no = $the_room->actual_rm_no;
+             // $actual_rm_no = $the_room->actual_rm_no;
               $rm_desc = $the_room->rm_desc;
               $rm_rate = $the_room->amt_per_night;
               
@@ -254,29 +259,10 @@ add_action('wp_ajax_nopriv_moh_summary_table_info', 'moh_summary_table_info' );
     $adults=sanitize_text_field($_POST['data']['no_adults']);
     $children =sanitize_text_field($_POST['data']['no_children']);
     $arr_time=sanitize_text_field($_POST['data']['arr_time']);
-    $room_no = sanitize_text_field($_POST['data']['rm_num']);
-    $room_nos = sanitize_text_field($_POST['data']['rm_nums']);
-
-    //GET ACTUAL ROOM NUMBERS (IE NOT WP ROOM POST ID).
-    // PUT ACTUAL ROOM NUMBERS IN $actual_rooms_array
-
-    global $wpdb, $wp_query;
-    $actual_rooms_array = array();
-    foreach($room_nos as $room_no){
-           
-            $get_rms = $wpdb->get_results("SELECT actual_rm_no, amt_per_night from wp_rooms where rm_id = '$room_no'");
-            //$rowCount = mysqli_num_rows(${'r_'.$room_no});
-            foreach($get_rms as $get_rm){
-              //echo $get_rm->actual_rm_no;
-              array_push($actual_rooms_array, $get_rm->actual_rm_no);
-              
-            }
-    }
-
-//calculate cost of stay
- // function calculate_cost(rooms, nights){
-
- // }
+    //$room_no = sanitize_text_field($_POST['data']['rm_num']);
+    $room_nos = $_POST['data']['rm_nums'];
+    //wp_send_json_error( $room_nos );
+ 
 
 //ADD GUEST INFORMATION TO DB
     global $wpdb, $wp_query;
@@ -292,41 +278,39 @@ add_action('wp_ajax_nopriv_moh_summary_table_info', 'moh_summary_table_info' );
     'no_children' => $children,
     'arrival' => $arr_time
     ));
-     $guest = $wpdb->insert_id;
+     
 
      if($add_guest){
      
-     }else{
-      wp_send_json_error("<p>Something Went Wrong.</p>" );
-     }
+     $guest = $wpdb->insert_id;
     
-   
-// //////////////////////////
-// ///PAYMENT WILL GO HERE////
-// //////////////////////////
+     $roomsTable = $wpdb->prefix.'rooms';
+     $bks = $wpdb->prefix.'bookings';
+     //$rmAr = array();
 
-// BOOKING QUERY 
-     //array to hold booking ids
-     //$confirm_booking = array();
-    foreach($actual_rooms_array as $actual_room_to_book){
-       $book_query = $wpdb->insert('wp_bookings', array(
-        'guest_id' => $guest,
-        'checkin' => $arr,
-        'checkout'=> $dep,
-        'room_no'=> $actual_room_to_book
-      ));
-         if($book_query){
-        $booking_id = $wpdb->insert_id;
-        
-        
-       }
-       else{
+
+      foreach($room_nos as $room_no){
       
-        wp_send_json_error("<p>Something went wrong with your booking.</p>" );
-       }
-          
-    }
+        $wpdb->query($wpdb->prepare(
+          "INSERT INTO $bks(guest_id,checkin,checkout,room_no) VALUES(%d,%s,%s,%d)",
+          array(
+            $guest,
+            $arr,
+            $dep,
+            $wpdb->get_var("SELECT actual_rm_no from $roomsTable where rm_id = '$room_no'")
+            )
+          ));
+       
+      }
+ 
+
+     }
+     
+     $booking_id=$wpdb->insert_id;
       $bookingResponse[] = array(
+        'errors'=>$wpdb->show_errors(),
+        'theRoomarray'=>$rmAr,
+        'roomnos'=>$room_nos,
         'guest_id'=>"<p>Guest ID: ".$guest. "</p>",
         'arrival_date'=>"<p>Check In Date: ".$arr. "</p>",
         'departure_date'=>"<p>Check Out Date: ".$dep. "</p>",

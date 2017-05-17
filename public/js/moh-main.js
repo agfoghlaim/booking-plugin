@@ -233,73 +233,91 @@ function checkDateFormat(theDt){
 Booking summary from localStorage
 */
 
-// $('h3#booking-summary-heading').text("You are booking: " );
-// $('p#booking-num-rooms').text("Number of Rooms: " + JSON.parse(localStorage.getItem("selected_rooms"))[0].ids.length);
-// $('p#summary-checkin').text("Check In: " + JSON.parse(localStorage.getItem("arrive")));
-// $('p#summary-checkout').text("Check Out: " + JSON.parse(localStorage.getItem("depart")));
-// //$('p#summary-price').text("Total(from localStorage): " + JSON.parse(localStorage.getItem("depart")));
-// $('p#summary-nights').text("No.Nights: " + JSON.parse(localStorage.getItem("numNights")));
+
 
 /*
 Add booking summary with info from server
 */
-window.onload = function(){
-	if(JSON.parse(localStorage.getItem("selected_rooms"))[0].ids.length>0){
-				var summaryData = {
-					arr:JSON.parse(localStorage.getItem("arrive")),
-					dep: JSON.parse(localStorage.getItem("depart")),
-					selectedRooms: JSON.parse(localStorage.getItem("selected_rooms"))[0].ids
+var windowLoc = $(location).attr('pathname');
+
+if(windowLoc === '/designassociates/moh/book-room-101/'){
+		$('h3#booking-summary-heading').text("You are booking: " );
+		$('p#booking-num-rooms').text("Number of Rooms: " + JSON.parse(localStorage.getItem("selected_rooms"))[0].ids.length);
+		$('p#summary-checkin').text("Check In: " + JSON.parse(localStorage.getItem("arrive")));
+		$('p#summary-checkout').text("Check Out: " + JSON.parse(localStorage.getItem("depart")));
+		//$('p#summary-price').text("Total(from localStorage): " + JSON.parse(localStorage.getItem("depart")));
+		$('p#summary-nights').text("No.Nights: " + JSON.parse(localStorage.getItem("numNights")));
+
+// var windowLoc = $(location).attr('pathname');
+// //alert(windowLoc);
+// if(windowLoc === '/designassociates/moh/book-room-101/'){
+// 	alert("only on this page "+ windowLoc);
+// }else{
+// 	alert(windowLoc);
+// }
+
+
+
+
+
+			window.onload = function(){
+
+				if(JSON.parse(localStorage.getItem("selected_rooms"))[0].ids.length>0){
+							var summaryData = {
+								arr:JSON.parse(localStorage.getItem("arrive")),
+								dep: JSON.parse(localStorage.getItem("depart")),
+								selectedRooms: JSON.parse(localStorage.getItem("selected_rooms"))[0].ids
+							}
+									 $.ajax({
+											type:'POST',
+											dataType: 'json',
+											url: myAjax.ajaxurl,
+											data: {
+												action: 'moh_summary_table_info',
+												data: summaryData,
+												//submission: document.getElementById('xyz').value,
+												security: myAjax.guest_security,
+											},
+											success: function(response){
+												$('div#moh-confirm-booking-table').html('');
+												var rowCounter = 1;
+												makeStuff('table', 'moh-summary-table', false, 'moh-confirm-booking-table' );
+												makeStuff('tr', 'tr-title', false, 'moh-summary-table' );
+												makeStuff('td', 'td-title-rate', 'Nightly Rate', 'tr-title' );
+												makeStuff('td', 'td-title-room', 'Room No', 'tr-title' );
+												makeStuff('td', 'td-title-nights', 'No. Nights', 'tr-title' );
+												makeStuff('td', 'td-title-cost', 'Total Cost', 'tr-title' );
+
+
+												for(i in response.data){
+													makeStuff('tr', 'tr-'+ rowCounter, false, 'moh-summary-table');
+													makeStuff('td', 'td-'+ response.data[i].rm_rate, response.data[i].rm_rate, 'tr-'+rowCounter);
+													makeStuff('td', 'td-'+ response.data[i].rm_no, response.data[i].rm_no, 'tr-'+rowCounter);
+													makeStuff('td', 'td-'+ response.data[i].num_nights, response.data[i].num_nights, 'tr-'+rowCounter);
+													makeStuff('td', 'td-'+ response.data[i].rm_cost, response.data[i].rm_cost, 'tr-'+rowCounter);
+													
+													rowCounter++;
+													
+												}
+												makeStuff('tr', 'tr-'+ rowCounter, false, 'moh-summary-table');
+												makeStuff('td', false, false, 'tr-'+rowCounter);
+												makeStuff('td', false, false, 'tr-'+rowCounter);
+												makeStuff('td', false, false, 'tr-'+rowCounter);
+												makeStuff('td', false, false, 'tr-'+rowCounter);
+												makeStuff('td', 'td-'+ rowCounter, "Total: €" +response.data[response.data.length-1].grand_total, 'moh-summary-table');
+												$('h3#moh-grand-total').append(response.data[response.data.length-1].grand_total);
+												//makeStuff('tr', 'tr-grand-total', 'tr-'+rowCounter);
+						 					},
+						 					error: function(response){
+						 						alert("error" + response.error);
+						 					}
+						 				});
+						//$(this).hide('slow');
+						//});
 				}
-						 $.ajax({
-								type:'POST',
-								dataType: 'json',
-								url: myAjax.ajaxurl,
-								data: {
-									action: 'moh_summary_table_info',
-									data: summaryData,
-									//submission: document.getElementById('xyz').value,
-									security: myAjax.guest_security,
-								},
-								success: function(response){
-									$('div#moh-confirm-booking-table').html('');
-									var rowCounter = 1;
-									makeStuff('table', 'moh-summary-table', false, 'moh-confirm-booking-table' );
-									makeStuff('tr', 'tr-title', false, 'moh-summary-table' );
-									makeStuff('td', 'td-title-rate', 'Nightly Rate', 'tr-title' );
-									makeStuff('td', 'td-title-room', 'Room No', 'tr-title' );
-									makeStuff('td', 'td-title-nights', 'No. Nights', 'tr-title' );
-									makeStuff('td', 'td-title-cost', 'Total Cost', 'tr-title' );
+			}
 
-
-									for(i in response.data){
-										makeStuff('tr', 'tr-'+ rowCounter, false, 'moh-summary-table');
-										makeStuff('td', 'td-'+ response.data[i].rm_rate, response.data[i].rm_rate, 'tr-'+rowCounter);
-										makeStuff('td', 'td-'+ response.data[i].rm_no, response.data[i].rm_no, 'tr-'+rowCounter);
-										makeStuff('td', 'td-'+ response.data[i].num_nights, response.data[i].num_nights, 'tr-'+rowCounter);
-										makeStuff('td', 'td-'+ response.data[i].rm_cost, response.data[i].rm_cost, 'tr-'+rowCounter);
-										
-										rowCounter++;
-										
-									}
-									makeStuff('tr', 'tr-'+ rowCounter, false, 'moh-summary-table');
-									makeStuff('td', false, false, 'tr-'+rowCounter);
-									makeStuff('td', false, false, 'tr-'+rowCounter);
-									makeStuff('td', false, false, 'tr-'+rowCounter);
-									makeStuff('td', false, false, 'tr-'+rowCounter);
-									makeStuff('td', 'td-'+ rowCounter, "Total: €" +response.data[response.data.length-1].grand_total, 'moh-summary-table');
-									$('h3#moh-grand-total').append(response.data[response.data.length-1].grand_total);
-									//makeStuff('tr', 'tr-grand-total', 'tr-'+rowCounter);
-			 					},
-			 					error: function(response){
-			 						alert("error" + response.error);
-			 					}
-			 				});
-			//$(this).hide('slow');
-			//});
-	}
 }
-
-
 
 
 /*
@@ -314,7 +332,7 @@ function notProperLength(str, max, min){
 	console.log(str);
 	console.log(max);
 	console.log(min);
- if(str.length > max || str.length <= min){
+ if(str.length > max || str.length < min){
  	console.log("true");
  	return true;
  }
@@ -448,6 +466,23 @@ function validateGuestInfo(){
 		if(!validateGuestInfo()){
 			return;
 		}
+		//send stripe info here
+		Stripe.setPublishableKey('pk_test_vjCqdUzDseC6Gmko8HO8ZZcA');
+		Stripe.card.createToken({
+			number: $('#card-no').val(),
+			cvc:$('#card-cvc').val(),
+			exp_month:$('#card-exp-month').val(),
+			exp_year:$('#card-exp-year').val()
+		}, stripeResponseHandler);
+		function stripeResponseHandler(status, response){
+			if(response.error){
+				alert("not ok " + response.error.message);
+			}else{
+				alert("ok" + response.id);
+				var token = response.id;
+			}
+		}
+
 	    var fn=$('input#fn').val();  //between 2 and 16
 	    var ln=$('input#ln').val(); //between 2 and 16
 	    var em=$('input#email').val(); //is email
@@ -469,7 +504,7 @@ function validateGuestInfo(){
 		for(i=0;i<rm_nums[0].ids.length;i++){
 			console.log(rm_nums[0].ids[i]);
 			roomsArray.push(rm_nums[0].ids[i]);
-			//console.log(roomsArray);
+			console.log("rooms array " + roomsArray);
 		}
 	     //console.log(fn, ln, em, ad, country, phone, postcode, adults, children, arr_time);
 	
@@ -509,6 +544,7 @@ function validateGuestInfo(){
 					success: function(response){
 						for(i in response.data){ 
 							$('div#info-success').append(
+								response.data[i].actualroomsarray,
 								response.data[i].guest_id,
 								response.data[i].arrival_date,
 								response.data[i].guest_name,
@@ -520,7 +556,7 @@ function validateGuestInfo(){
 								);
 	
 							}
-					window.location.href = "http://localhost/designassociates/moh/book-room-101/booking-confirmation";	
+					//window.location.href = "http://localhost/designassociates/moh/book-room-101/booking-confirmation";	
 					},
 					error: function(response){
 						alert("error" + response.error);
